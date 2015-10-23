@@ -205,9 +205,9 @@ private ArrayAdapter<String> mForecastAdapter;
             super.onPostExecute(strings);
             if (strings != null) {
                 mForecastAdapter.clear();
-                for (String dayForecastStr : strings) {
-                    mForecastAdapter.add(dayForecastStr);
-                };
+                mForecastAdapter.addAll(strings);
+                //for (String dayForecastStr : strings) {
+                //    mForecastAdapter.add(dayForecastStr);
             } else Log.v(Log_TAG,"AsyncTask returned null");
         }
     }
