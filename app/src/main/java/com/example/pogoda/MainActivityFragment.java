@@ -11,10 +11,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import org.json.JSONException;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,7 +31,7 @@ import java.util.List;
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
-private Adapter mForecastAdapter;
+private ArrayAdapter<String> mForecastAdapter;
 
     public MainActivityFragment() {
     }
@@ -95,11 +96,11 @@ private Adapter mForecastAdapter;
         return super.onOptionsItemSelected(item);
     }
 
-    private class FetchWeatherTask extends AsyncTask<String, Void, Void> {
+    private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
         private final String Log_TAG = FetchWeatherTask.class.getSimpleName();
 
         @Override
-        protected Void doInBackground(String... params) {
+        protected String[] doInBackground(String... params) {
             // These two need to be declared outside the try/catch
 // so that they can be closed in the finally block.
             HttpURLConnection urlConnection = null;
@@ -107,6 +108,10 @@ private Adapter mForecastAdapter;
 
 // Will contain the raw JSON response as a string.
             String forecastJsonStr = null;
+
+            String format = "json";
+            String units = "metric";
+            int numDays = 7;
 
             try {
                 //URL url = new URL(
@@ -119,16 +124,13 @@ private Adapter mForecastAdapter;
                 final String DAYS_PARAM = "cnt";
                 final String APPID_PARAM = "APPID";
 
-                String format = "json";
-                String units = "metric";
-                int numdays = 7;
 
                 Uri buildUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
                         .appendQueryParameter(QUERY_PARAM, params[0])
                         .appendQueryParameter(APPID_PARAM, getString(R.string.OpenWeatherMapAPPID))
                         .appendQueryParameter(FORMAT_PARAM, format)
                         .appendQueryParameter(UNITS_PARAM, units)
-                        .appendQueryParameter(DAYS_PARAM, Integer.toString(numdays))
+                        .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
                         .build();
 
                 URL url = new URL(buildUri.toString());
@@ -187,7 +189,26 @@ private Adapter mForecastAdapter;
                     }
                 }
             }
+
+            try {
+                return WeatherDataParser.getWeatherDataFromJson(forecastJsonStr, numDays);
+            } catch (JSONException e) {
+                Log.e(Log_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
+
             return null;
+        }
+
+        @Override
+        protected void onPostExecute(String[] strings) {
+            super.onPostExecute(strings);
+            if (strings != null) {
+                mForecastAdapter.clear();
+                for (String dayForecastStr : strings) {
+                    mForecastAdapter.add(dayForecastStr);
+                };
+            } else Log.v(Log_TAG,"AsyncTask returned null");
         }
     }
 
