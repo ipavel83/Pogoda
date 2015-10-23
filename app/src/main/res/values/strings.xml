@@ -2,4 +2,6 @@
     <string name="app_name">Pogoda</string>
     <string name="action_settings">Settings</string>
     <string name="action_refresh" translatable="false">Refresh</string>
+    <string name="OpenWeatherMapAPPID" translatable="false">2f1e9e8e2aedccc55d971a2eb1aec011</string>
+
 </resources>
