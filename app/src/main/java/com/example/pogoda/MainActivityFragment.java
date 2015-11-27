@@ -1,8 +1,10 @@
 package com.example.pogoda;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,6 +13,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -68,7 +71,23 @@ private ArrayAdapter<String> mForecastAdapter;
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
         listView.setAdapter((ListAdapter) mForecastAdapter);
 
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
+                String forecast = mForecastAdapter.getItem(position);
+                Intent detailintent = new Intent(getActivity(), DetailActivity.class)
+                        .putExtra(Intent.EXTRA_TEXT, forecast);
+                startActivity(detailintent);
+            }
+        });
+
         return rootView;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
     }
 
 
@@ -88,12 +107,19 @@ private ArrayAdapter<String> mForecastAdapter;
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_refresh) {
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-            weatherTask.execute("Samara,Ru");
+            updateWeather();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void updateWeather(){
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        weatherTask.execute(
+                PreferenceManager.getDefaultSharedPreferences(getActivity())
+                        .getString(getString(R.string.pref_location_key), getString(R.string.pref_location_default))
+        );
     }
 
     private class FetchWeatherTask extends AsyncTask<String, Void, String[]> {
